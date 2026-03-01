@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learning Clock</title>
+  <style>
+    :root {
+      --clock-size: min(82vw, 430px);
+      --border-color: #000;
+      --face-bg: #fff;
+      --text-color: #000;
+      --ok: #0b8f30;
+      --err: #c11b1b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Comic Sans MS", Arial, sans-serif;
+      background: #fff;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: min(100%, 520px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+    }
+
+    .prompt {
+      font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    button {
+      border: 2px solid #111;
+      background: #fff;
+      color: #111;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 120px;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #000;
+    }
+
+    .status {
+      min-height: 1.5em;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.err {
+      color: var(--err);
+    }
+
+    .clock {
+      width: var(--clock-size);
+      height: var(--clock-size);
+      border: 6px solid var(--border-color);
+      border-radius: 50%;
+      position: relative;
+      background: var(--face-bg);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      user-select: none;
+      touch-action: none;
+    }
+
+    .number {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      margin-left: -17px;
+      margin-top: -17px;
+      left: 50%;
+      top: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: clamp(1rem, 2.6vw, 1.3rem);
+      color: #000;
+      pointer-events: none;
+    }
+
+    .tick {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 2px;
+      transform-origin: 50% calc(var(--clock-size) * 0.44);
+      background: #000;
+      pointer-events: none;
+    }
+
+    .tick.big {
+      height: 16px;
+      margin-top: calc(var(--clock-size) * -0.44);
+    }
+
+    .tick.small {
+      height: 9px;
+      margin-top: calc(var(--clock-size) * -0.44);
+      opacity: 0.9;
+    }
+
+    .hand {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      border-radius: 999px;
+      background: #000;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .hand:active {
+      cursor: grabbing;
+    }
+
+    .hour-hand {
+      width: 10px;
+      height: calc(var(--clock-size) * 0.23);
+      z-index: 6;
+    }
+
+    .minute-hand {
+      width: 6px;
+      height: calc(var(--clock-size) * 0.35);
+      z-index: 7;
+    }
+
+    .center-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #000;
+      transform: translate(-50%, -50%);
+      z-index: 8;
+      pointer-events: none;
+    }
+
+    .answer {
+      min-height: 1.4em;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #333;
+      margin: 0;
+    }
+
+    @media (max-width: 420px) {
+      :root {
+        --clock-size: min(88vw, 380px);
+      }
+
+      button {
+        min-width: 104px;
+        padding: 9px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1 class="prompt" id="prompt">Set the clock to: 12:00</h1>
+
+    <div class="controls">
+      <button id="checkBtn" type="button">Check Answer</button>
+      <button id="newBtn" type="button">New Time</button>
+      <label class="toggle" for="showAnswer">
+        <input id="showAnswer" type="checkbox" />
+        Show correct answer
+      </label>
+    </div>
+
+    <p class="status" id="status" aria-live="polite"></p>
+
+    <section class="clock" id="clock" aria-label="Analog clock for learning time"></section>
+
+    <p class="answer" id="answerText"></p>
+  </main>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const promptEl = document.getElementById("prompt");
+    const statusEl = document.getElementById("status");
+    const answerTextEl = document.getElementById("answerText");
+    const checkBtn = document.getElementById("checkBtn");
+    const newBtn = document.getElementById("newBtn");
+    const showAnswerToggle = document.getElementById("showAnswer");
+
+    const hourHand = document.createElement("div");
+    hourHand.className = "hand hour-hand";
+    const minuteHand = document.createElement("div");
+    minuteHand.className = "hand minute-hand";
+
+    const centerDot = document.createElement("div");
+    centerDot.className = "center-dot";
+
+    let currentMinutes = 0;
+    let targetHour = 12;
+    let targetMinute = 0;
+    let dragMode = null;
+    let prevHourAngle = 0;
+    let prevMinuteAngle = 0;
+
+    function createTicksAndNumbers() {
+      for (let i = 0; i < 60; i += 1) {
+        const tick = document.createElement("div");
+        tick.className = `tick ${i % 5 === 0 ? "big" : "small"}`;
+        tick.style.transform = `translateX(-50%) rotate(${i * 6}deg)`;
+        clock.appendChild(tick);
+      }
+
+      const radius = 42;
+      for (let num = 1; num <= 12; num += 1) {
+        const angle = (num / 12) * Math.PI * 2;
+        const numberEl = document.createElement("div");
+        numberEl.className = "number";
+        numberEl.textContent = num;
+        const x = 50 + radius * Math.sin(angle);
+        const y = 50 - radius * Math.cos(angle);
+        numberEl.style.left = `${x}%`;
+        numberEl.style.top = `${y}%`;
+        clock.appendChild(numberEl);
+      }
+
+      clock.appendChild(hourHand);
+      clock.appendChild(minuteHand);
+      clock.appendChild(centerDot);
+    }
+
+    function normalizeAngle(angle) {
+      return ((angle % 360) + 360) % 360;
+    }
+
+    function shortestAngleDelta(prev, next) {
+      const a = normalizeAngle(prev);
+      const b = normalizeAngle(next);
+      let delta = b - a;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      return delta;
+    }
+
+    function setClockFromMinutes(totalMinutes) {
+      currentMinutes = ((totalMinutes % 720) + 720) % 720;
+      const hourAngle = currentMinutes * 0.5;
+      const minuteAngle = (currentMinutes % 60) * 6;
+      hourHand.style.transform = `translate(-50%, -100%) rotate(${hourAngle}deg)`;
+      minuteHand.style.transform = `translate(-50%, -100%) rotate(${minuteAngle}deg)`;
+      prevHourAngle = hourAngle;
+      prevMinuteAngle = minuteAngle;
+    }
+
+    function pointerAngleFromCenter(clientX, clientY) {
+      const rect = clock.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      const angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+      return normalizeAngle(angle);
+    }
+
+    function getEventPoint(e) {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function updateByMinuteDrag(angle) {
+      const delta = shortestAngleDelta(prevMinuteAngle, angle);
+      currentMinutes += delta / 6;
+      setClockFromMinutes(currentMinutes);
+    }
+
+    function updateByHourDrag(angle) {
+      const delta = shortestAngleDelta(prevHourAngle, angle);
+      currentMinutes += delta * 2;
+      setClockFromMinutes(currentMinutes);
+    }
+
+    function onMove(e) {
+      if (!dragMode) return;
+      e.preventDefault();
+      const p = getEventPoint(e);
+      const angle = pointerAngleFromCenter(p.x, p.y);
+      if (dragMode === "minute") {
+        updateByMinuteDrag(angle);
+      } else if (dragMode === "hour") {
+        updateByHourDrag(angle);
+      }
+      renderAnswerHint();
+    }
+
+    function endDrag() {
+      dragMode = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("mouseup", endDrag);
+      window.removeEventListener("touchend", endDrag);
+      window.removeEventListener("touchcancel", endDrag);
+    }
+
+    function startDrag(type, e) {
+      dragMode = type;
+      e.preventDefault();
+      const p = getEventPoint(e);
+      const angle = pointerAngleFromCenter(p.x, p.y);
+      if (type === "minute") prevMinuteAngle = angle;
+      if (type === "hour") prevHourAngle = angle;
+      window.addEventListener("mousemove", onMove, { passive: false });
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("mouseup", endDrag);
+      window.addEventListener("touchend", endDrag);
+      window.addEventListener("touchcancel", endDrag);
+    }
+
+    function formatDisplayTime(hour24, minute) {
+      const hour12 = ((hour24 + 11) % 12) + 1;
+      return `${hour12}:${String(minute).padStart(2, "0")}`;
+    }
+
+    function randomTargetTime() {
+      const hour24 = Math.floor(Math.random() * 12);
+      const minute = Math.floor(Math.random() * 60);
+      targetHour = ((hour24 + 11) % 12) + 1;
+      targetMinute = minute;
+      promptEl.textContent = `Set the clock to: ${formatDisplayTime(hour24, minute)}`;
+      statusEl.textContent = "";
+      statusEl.className = "status";
+      renderAnswerHint();
+    }
+
+    function currentTimeAsMinutes() {
+      return normalizeAngle(currentMinutes * 0.5) * 2;
+    }
+
+    function targetTimeAsMinutes() {
+      return (targetHour % 12) * 60 + targetMinute;
+    }
+
+    function circularMinuteDiff(a, b) {
+      const diff = Math.abs(a - b) % 720;
+      return Math.min(diff, 720 - diff);
+    }
+
+    function checkAnswer() {
+      const guess = currentTimeAsMinutes();
+      const target = targetTimeAsMinutes();
+      const diff = circularMinuteDiff(guess, target);
+      if (diff <= 3) {
+        statusEl.textContent = "Correct!";
+        statusEl.className = "status ok";
+      } else {
+        statusEl.textContent = "Try again";
+        statusEl.className = "status err";
+      }
+    }
+
+    function renderAnswerHint() {
+      if (!showAnswerToggle.checked) {
+        answerTextEl.textContent = "";
+        return;
+      }
+      const minutes = targetTimeAsMinutes();
+      const hour = Math.floor(minutes / 60) % 12 || 12;
+      const minute = Math.round(minutes % 60);
+      answerTextEl.textContent = `Correct answer: ${hour}:${String(minute).padStart(2, "0")}`;
+    }
+
+    function setupEvents() {
+      minuteHand.addEventListener("mousedown", (e) => startDrag("minute", e));
+      minuteHand.addEventListener("touchstart", (e) => startDrag("minute", e), { passive: false });
+      hourHand.addEventListener("mousedown", (e) => startDrag("hour", e));
+      hourHand.addEventListener("touchstart", (e) => startDrag("hour", e), { passive: false });
+      checkBtn.addEventListener("click", checkAnswer);
+      newBtn.addEventListener("click", randomTargetTime);
+      showAnswerToggle.addEventListener("change", renderAnswerHint);
+    }
+
+    createTicksAndNumbers();
+    setupEvents();
+    setClockFromMinutes(0);
+    randomTargetTime();
+  </script>
+</body>
+</html>
