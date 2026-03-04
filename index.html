@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Clock Academy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Mono:wght@400;500&family=Sen:wght@500&display=swap" rel="stylesheet">
   <style>
     :root {
       --cs: min(78vw, 400px);
@@ -99,7 +99,7 @@
       font-size: 0.65rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #8a8070;
+      color: #ffffff;
     }
     .score-value {
       font-family: 'DM Mono', monospace;
@@ -107,8 +107,8 @@
       font-weight: 500;
       color: var(--face);
     }
-    .score-value.correct { color: #6fcf97; }
-    .score-value.streak { color: var(--gold); }
+    .score-value.correct { color: #ffffff; }
+    .score-value.streak { color: #ffffff; }
 
     /* ── Challenge card ── */
     .challenge-card {
@@ -133,7 +133,7 @@
       margin-bottom: 4px;
     }
     .challenge-time {
-      font-size: clamp(2rem, 8vw, 3rem);
+      font-size: clamp(2.8rem, 11vw, 4.2rem);
       font-weight: 600;
       letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
@@ -167,7 +167,7 @@
       text-transform: uppercase;
       border: 1.5px solid #3a3530;
       background: transparent;
-      color: #c8b89a;
+      color: #ffffff;
       border-radius: 100px;
       padding: 7px 16px;
       cursor: pointer;
@@ -198,9 +198,9 @@
       font-size: 0.65rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      border: 1.5px solid var(--soft);
+      border: 1.5px solid var(--ink);
       background: transparent;
-      color: var(--muted);
+      color: var(--ink);
       border-radius: 100px;
       padding: 6px 16px;
       cursor: pointer;
@@ -346,34 +346,41 @@
       border-radius: 0 0 2px 2px;
     }
 
-    /* Center cap */
-    .center-cap {
+    /* Center hint button — invisible but clickable, dot drawn via ::before */
+    .center-hint-btn {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 14px;
-      height: 14px;
-      transform: translate(-50%, -50%);
-      background: var(--ink);
-      border-radius: 50%;
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    /* Seconds toggle at center (small ring) */
-    .seconds-toggle {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 22px;
-      height: 22px;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      min-height: 28px;
       transform: translate(-50%, -50%);
       background: transparent;
       border: none;
       border-radius: 50%;
+      color: transparent;
+      cursor: default;
       z-index: 12;
-      cursor: pointer;
       padding: 0;
+      box-shadow: none;
+    }
+    /* The visible ink dot */
+    .center-hint-btn::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translate(-50%, -50%);
+      background: var(--ink);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .center-hint-btn:active {
+      transform: translate(-50%, -50%) scale(0.92);
+      box-shadow: none;
     }
 
     /* ── Live time badge ── */
@@ -407,11 +414,12 @@
     }
 
     .check-btn {
-      font-family: 'Fraunces', Georgia, serif;
-      font-size: 1.05rem;
-      font-weight: 600;
-      font-style: italic;
-      letter-spacing: 0.01em;
+      font-family: 'Sen', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 500;
+      font-style: normal;
+      letter-spacing: 0.02em;
+      text-transform: none;
       background: var(--ink);
       color: var(--face);
       border: 2px solid var(--ink);
@@ -431,14 +439,15 @@
       box-shadow: 0 1px 0 #0a0806;
     }
     .check-btn.correct {
-      background: var(--correct);
-      border-color: #1d5c38;
-      box-shadow: 0 4px 0 #1d5c38;
+      background: #8BD02A;
+      border-color: #6ba320;
+      box-shadow: 0 4px 0 #6ba320;
+      color: var(--ink);
     }
     .check-btn.wrong {
-      background: var(--wrong);
-      border-color: #8d1b1b;
-      box-shadow: 0 4px 0 #8d1b1b;
+      background: #E70000;
+      border-color: #b30000;
+      box-shadow: 0 4px 0 #b30000;
     }
 
     .hint-btn {
@@ -551,7 +560,6 @@
     <!-- Challenge card -->
     <div class="challenge-card">
       <div>
-        <div class="challenge-label">Set the clock to</div>
         <div class="challenge-time" id="challengeTime">
           <span class="digit" id="cH1">1</span><span class="digit" id="cH2">2</span><span class="colon">:</span><span class="digit" id="cM1">0</span><span class="digit" id="cM2">0</span><span id="cSecWrap"><span class="colon" id="cSecColon">:</span><span class="digit" id="cS1">0</span><span class="digit" id="cS2">0</span></span>
         </div>
@@ -565,14 +573,13 @@
     <!-- Clock face -->
     <div class="clock-wrap">
       <section class="clock" id="clock" aria-label="Interactive analog clock">
-        <button class="seconds-toggle" id="secondsToggle" type="button" aria-label="Toggle seconds hand" aria-pressed="false"></button>
+        <button class="center-hint-btn" id="centerHintBtn" type="button" aria-label="Show hint">?</button>
       </section>
       <div class="current-time-badge" id="currentTimeBadge">12:00</div>
     </div>
 
     <!-- Bottom controls -->
     <div class="bottom-controls">
-      <button class="hint-btn" id="hintBtn" type="button">Hint</button>
       <button class="check-btn" id="checkBtn" type="button">Check Answer</button>
     </div>
 
@@ -602,13 +609,12 @@
     let checkTimer = null, hintTimer = null;
 
     /* ── DOM refs ── */
-    const clockEl   = document.getElementById('clock');
-    const checkBtn  = document.getElementById('checkBtn');
-    const hintBtn   = document.getElementById('hintBtn');
-    const showBtn   = document.getElementById('showBtn');
-    const newTimeBtn= document.getElementById('newTimeBtn');
-    const secToggle = document.getElementById('secondsToggle');
-    const badge     = document.getElementById('currentTimeBadge');
+    const clockEl        = document.getElementById('clock');
+    const checkBtn       = document.getElementById('checkBtn');
+    const showBtn        = document.getElementById('showBtn');
+    const newTimeBtn     = document.getElementById('newTimeBtn');
+    const centerHintBtn  = document.getElementById('centerHintBtn');
+    const badge          = document.getElementById('currentTimeBadge');
 
     const scoreCorrectEl = document.getElementById('scoreCorrect');
     const scoreStreakEl  = document.getElementById('scoreStreak');
@@ -620,14 +626,12 @@
     const secondHand = document.createElement('div');
     const hintHour   = document.createElement('div');
     const hintMinute = document.createElement('div');
-    const centerCap  = document.createElement('div');
 
     hourHand.className   = 'hand hour-hand';
     minuteHand.className = 'hand minute-hand';
     secondHand.className = 'hand second-hand';
     hintHour.className   = 'hint-hand hint-hour';
     hintMinute.className = 'hint-hand hint-minute';
-    centerCap.className  = 'center-cap';
 
     function buildClock() {
       for (let i = 0; i < 60; i++) {
@@ -653,7 +657,6 @@
       clockEl.appendChild(hourHand);
       clockEl.appendChild(minuteHand);
       clockEl.appendChild(secondHand);
-      clockEl.appendChild(centerCap);
     }
 
     /* ── Angle helpers ── */
@@ -861,7 +864,7 @@
 
       checkBtn.classList.remove('correct', 'wrong');
       checkBtn.classList.add(correct ? 'correct' : 'wrong');
-      checkBtn.textContent = correct ? '✓ Correct!' : '✗ Try again';
+      checkBtn.textContent = correct ? 'Correct' : 'Try Again';
 
       if (correct) {
         score++;
@@ -886,7 +889,6 @@
     function toggleSeconds() {
       isSecondsMode = !isSecondsMode;
       secondHand.style.display = isSecondsMode ? 'block' : 'none';
-      secToggle.setAttribute('aria-pressed', String(isSecondsMode));
       updateTargetDisplay();
     }
 
@@ -910,11 +912,10 @@
     secondHand.addEventListener('mousedown', e => startDrag('second', e));
     secondHand.addEventListener('touchstart',e => startDrag('second', e), { passive: false });
 
-    checkBtn.addEventListener('click',  checkAnswer);
-    hintBtn.addEventListener('click',   showHint);
-    showBtn.addEventListener('click',   toggleShow);
-    newTimeBtn.addEventListener('click',randomTarget);
-    secToggle.addEventListener('click', e => { e.stopPropagation(); toggleSeconds(); });
+    checkBtn.addEventListener('click',       checkAnswer);
+    showBtn.addEventListener('click',        toggleShow);
+    newTimeBtn.addEventListener('click',     randomTarget);
+    centerHintBtn.addEventListener('click',  e => { e.stopPropagation(); showHint(); });
 
     /* ── Init ── */
     buildClock();
